@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agente Z7</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0d14;
+    --surface: #111520;
+    --surface2: #171d2e;
+    --border: #1e2740;
+    --accent: #0066ff;
+    --accent2: #00d4ff;
+    --text: #e8eaf0;
+    --muted: #6b7499;
+    --user-bg: #0a1f4e;
+    --bot-bg: #111520;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 24px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .logo-icon {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 15px;
+    color: white;
+  }
+  .logo-text {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    letter-spacing: -0.3px;
+  }
+  .logo-text span { color: var(--accent2); }
+  .status {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .status-dot {
+    width: 7px; height: 7px;
+    background: #00e676;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%,100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  .btn-new {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-new:hover { background: var(--border); border-color: var(--accent); }
+
+  #messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    scroll-behavior: smooth;
+  }
+  #messages::-webkit-scrollbar { width: 4px; }
+  #messages::-webkit-scrollbar-track { background: transparent; }
+  #messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  .welcome {
+    text-align: center;
+    padding: 40px 20px;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  .welcome-icon {
+    width: 64px; height: 64px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 24px;
+    color: white;
+    margin: 0 auto 20px;
+  }
+  .welcome h2 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    margin-bottom: 8px;
+  }
+  .welcome p {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 28px;
+  }
+  .suggestions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    text-align: left;
+  }
+  .suggestion {
+    padding: 14px 16px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 13px;
+    line-height: 1.4;
+    color: var(--text);
+  }
+  .suggestion:hover {
+    border-color: var(--accent);
+    background: var(--user-bg);
+    transform: translateY(-1px);
+  }
+  .suggestion .s-icon { font-size: 18px; margin-bottom: 6px; display: block; }
+  .suggestion .s-title { font-weight: 500; font-size: 12px; color: var(--accent2); margin-bottom: 3px; }
+  .suggestion .s-desc { color: var(--muted); font-size: 12px; }
+
+  .msg {
+    display: flex;
+    gap: 12px;
+    max-width: 800px;
+    animation: fadeIn 0.3s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  .msg.user { flex-direction: row-reverse; margin-left: auto; }
+  .msg-avatar {
+    width: 34px; height: 34px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: 'Syne', sans-serif;
+    flex-shrink: 0;
+  }
+  .msg.bot .msg-avatar { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: white; }
+  .msg.user .msg-avatar { background: var(--user-bg); border: 1px solid var(--accent); color: var(--accent2); }
+  .msg-content { flex: 1; min-width: 0; }
+  .msg-bubble {
+    padding: 14px 16px;
+    border-radius: 14px;
+    font-size: 14px;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .msg.bot .msg-bubble {
+    background: var(--bot-bg);
+    border: 1px solid var(--border);
+    border-top-left-radius: 4px;
+  }
+  .msg.user .msg-bubble {
+    background: var(--user-bg);
+    border: 1px solid rgba(0,102,255,0.3);
+    border-top-right-radius: 4px;
+  }
+  .typing-dots { display: inline-flex; gap: 4px; align-items: center; padding: 4px 0; }
+  .typing-dots span {
+    width: 6px; height: 6px;
+    background: var(--accent2);
+    border-radius: 50%;
+    animation: dot 1.2s infinite;
+  }
+  .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes dot { 0%,60%,100% { transform: translateY(0); opacity: 0.4; } 30% { transform: translateY(-4px); opacity: 1; } }
+
+  .input-area {
+    padding: 16px 24px 20px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .input-box {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 10px 12px;
+    transition: border-color 0.2s;
+  }
+  .input-box:focus-within { border-color: var(--accent); }
+  #input {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    resize: none;
+    max-height: 120px;
+    min-height: 22px;
+  }
+  #input::placeholder { color: var(--muted); }
+  #send-btn {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none;
+    border-radius: 9px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.2s, transform 0.1s;
+    flex-shrink: 0;
+  }
+  #send-btn:hover { opacity: 0.85; transform: scale(1.05); }
+  #send-btn:active { transform: scale(0.95); }
+  #send-btn svg { width: 16px; height: 16px; fill: white; }
+  .input-hint { font-size: 11px; color: var(--muted); text-align: center; margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">Z7</div>
+    <div class="logo-text">Agente <span>Z7</span></div>
+  </div>
+  <div class="status">
+    <div class="status-dot"></div>
+    Groq • Online
+  </div>
+  <button class="btn-new" onclick="novaConversa()">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Nova conversa
+  </button>
+</header>
+
+<div id="messages">
+  <div class="welcome" id="welcome">
+    <div class="welcome-icon">Z7</div>
+    <h2>Olá! Sou o Agente Z7</h2>
+    <p>Seu assistente inteligente para criar anúncios profissionais, descrições de produtos, posts para redes sociais e muito mais.</p>
+    <div class="suggestions">
+      <div class="suggestion" onclick="usarSugestao(this)">
+        <span class="s-icon">🏗️</span>
+        <div class="s-title">Anúncio de equipamento</div>
+        <div class="s-desc">Escavadeira CAT 320D, 2018, 8500h, R$380.000, ES</div>
+      </div>
+      <div class="suggestion" onclick="usarSugestao(this)">
+        <span class="s-icon">📷</span>
+        <div class="s-title">Post de câmera</div>
+        <div class="s-desc">Câmera Intelbras 4MP, kit completo com instalação</div>
+      </div>
+      <div class="suggestion" onclick="usarSugestao(this)">
+        <span class="s-icon">📝</span>
+        <div class="s-title">Corrigir texto</div>
+        <div class="s-desc">Cole um texto e peça para organizar e corrigir</div>
+      </div>
+      <div class="suggestion" onclick="usarSugestao(this)">
+        <span class="s-icon">#️⃣</span>
+        <div class="s-title">Hashtags profissionais</div>
+        <div class="s-desc">Gerar hashtags para segurança e automação</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="input-area">
+  <div class="input-box">
+    <textarea id="input" placeholder="Digite seu pedido... (Enter para enviar, Shift+Enter para nova linha)" rows="1"></textarea>
+    <button id="send-btn" onclick="enviar()">
+      <svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13"/></svg>
+    </button>
+  </div>
+  <div class="input-hint">Agente Z7 — z7grupo.com.br</div>
+</div>
+
+<script>
+let historico = [];
+let respondendo = false;
+
+const input = document.getElementById('input');
+const msgs = document.getElementById('messages');
+
+input.addEventListener('input', () => {
+  input.style.height = 'auto';
+  input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+});
+
+input.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviar(); }
+});
+
+function usarSugestao(el) {
+  const desc = el.querySelector('.s-desc').textContent;
+  const title = el.querySelector('.s-title').textContent;
+  input.value = `${title}: ${desc}`;
+  input.style.height = 'auto';
+  enviar();
+}
+
+function novaConversa() {
+  historico = [];
+  msgs.innerHTML = '';
+  const welcome = document.createElement('div');
+  welcome.className = 'welcome';
+  welcome.innerHTML = `
+    <div class="welcome-icon">Z7</div>
+    <h2>Nova conversa</h2>
+    <p>O que posso fazer por você?</p>
+  `;
+  msgs.appendChild(welcome);
+}
+
+async function enviar() {
+  const texto = input.value.trim();
+  if (!texto || respondendo) return;
+
+  const welcome = document.getElementById('welcome');
+  if (welcome) welcome.remove();
+
+  respondendo = true;
+  input.value = '';
+  input.style.height = 'auto';
+
+  historico.push({ role: 'user', content: texto });
+  addMsg('user', texto);
+
+  const botMsg = addMsg('bot', '');
+  const bubble = botMsg.querySelector('.msg-bubble');
+  bubble.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
+
+  try {
+    const resp = await fetch('/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: historico })
+    });
+
+    if (!resp.ok) throw new Error('Erro ' + resp.status);
+
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let fullText = '';
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop();
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          try {
+            const data = JSON.parse(line.slice(6));
+            if (data.content) {
+              fullText += data.content;
+              bubble.textContent = fullText;
+              msgs.scrollTop = msgs.scrollHeight;
+            }
+            if (data.done) break;
+          } catch {}
+        }
+      }
+    }
+
+    if (fullText) historico.push({ role: 'assistant', content: fullText });
+    else bubble.textContent = '[Sem resposta do modelo]';
+
+  } catch (err) {
+    bubble.textContent = 'Erro ao conectar. Tente novamente.';
+    console.error(err);
+  }
+
+  respondendo = false;
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function addMsg(role, text) {
+  const div = document.createElement('div');
+  div.className = `msg ${role}`;
+  div.innerHTML = `
+    <div class="msg-avatar">${role === 'bot' ? 'Z7' : 'EU'}</div>
+    <div class="msg-content">
+      <div class="msg-bubble">${text}</div>
+    </div>
+  `;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  return div;
+}
+</script>
+</body>
+</html>
